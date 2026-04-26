@@ -1,0 +1,340 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MLB - My Lab Buddy | Invoice Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        @media print {
+            body { background-color: white; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            .invoice-container { 
+                box-shadow: none !important; 
+                border: none !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            @page { margin: 1.5cm; }
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-field:focus {
+            border-color: #2563eb;
+        }
+
+        .test-row:hover .delete-btn {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto flex flex-col gap-8">
+        
+        <!-- Input Form (Hidden on Print) -->
+        <div class="no-print bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+            <div class="flex items-center justify-between mb-6">
+                <h1 class="text-2xl font-bold text-blue-800">MLB Invoice Generator</h1>
+                <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold flex items-center gap-2 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                    Print / Save as PDF
+                </button>
+            </div>
+
+            <!-- Patient Info Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div class="input-group">
+                    <label>Patient Name</label>
+                    <input type="text" id="in_patientName" class="input-field" placeholder="Full Name" oninput="updateInvoice()">
+                </div>
+                <div class="input-group">
+                    <label>Age</label>
+                    <input type="text" id="in_age" class="input-field" placeholder="e.g. 28" oninput="updateInvoice()">
+                </div>
+                <div class="input-group">
+                    <label>Gender</label>
+                    <select id="in_gender" class="input-field" onchange="updateInvoice()">
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Referred By</label>
+                    <input type="text" id="in_referredBy" class="input-field" placeholder="Dr. Name / Self" oninput="updateInvoice()">
+                </div>
+                <div class="input-group">
+                    <label>Registration Date</label>
+                    <input type="date" id="in_regDate" class="input-field" oninput="updateInvoice()">
+                </div>
+                <div class="input-group">
+                    <label>MSME Reg No. UDYAM-DL-09-0030416</label>
+                    <input type="text" id="in_msme" class="input-field" placeholder="Enter Reg No." oninput="updateInvoice()">
+                </div>
+                <div class="input-group">
+                    <label>Lab Address</label>
+                    <select id="lab_address" class="" onchange="updateInvoice()">
+                        <option value="Prognosis">Prognosis Laboratories</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Test Itemizer -->
+            <div class="mb-4">
+                <h3 class="font-bold text-gray-700 mb-2 border-b pb-2">Tests / Services</h3>
+                <div id="itemRows" class="space-y-2">
+                    <!-- Dynamic Rows Here -->
+                </div>
+                <button onclick="addRow()" class="mt-4 text-sm font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1">
+                    + Add New Test
+                </button>
+            </div>
+        </div>
+
+        <!-- Invoice Preview Area -->
+        <div id="invoice" class="invoice-container bg-white p-12 rounded-xl shadow-2xl border border-gray-200 mx-auto w-full">
+            <!-- Header -->
+            <div class="flex justify-between items-start border-b-2 border-blue-800 pb-8 mb-8">
+                <div>
+                    <!-- <h2 class="text-4xl font-extrabold text-blue-900 tracking-tight"></h2> -->
+                    <!-- <p class="text-lg font-semibold text-gray-600"></p> -->
+                    <img class="h-24 w-48 object-cover" src="./zorpid.png" alt="">
+                    <div class="mt-4 text-sm text-gray-500 leading-relaxed">
+                        <p id="comp_address"><strong style="color: black;">Reg. Office: </strong>622A/5A, Govindpuri, Kalkaji<br>New Delhi, Delhi - 110019</p>
+                        <p id="comp_address"><strong style="color: black;">Customer Care: </strong> 8448879897</p>
+                        <!-- <p class="font-semibold text-gray-700 mt-1">Customer Care: 8448879897</p> -->
+                        <p id="msme_display"><strong style="color: black;">MSME Reg No: </strong><span></span></p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <br>
+                    <h1 class="text-4xl font-bold text-gray-400 uppercase tracking-widest mb-4" style="color: black;">Receipt</h1>
+                    <br>
+                    <p class="text-sm text-gray-500">Invoice No: <span id="inv_no" class="font-bold text-gray-800"></span></p>
+                    <p class="text-sm text-gray-500">Date: <span id="inv_date" class="font-bold text-gray-800"></span></p>
+                    <!-- <p class="text-sm text-gray-500"><strong style="color: black;">Diagnostics Partner:</strong> Prognosis Laboratories</p>
+                    <p class="text-sm text-gray-500">Plot NO 515, Ground Floor, Sector-19<br>Dwarka, New Delhi, Delhi - 110075</p> -->
+                    <!-- <p class="text-sm text-gray-500"><strong style="color: black;">Diagnostics Partner:</strong> Healthians</p>
+                    <p class="text-sm text-gray-500">Plot No. 518, Udyog Vihar, Phase-3<br>Gurugram, Haryana, India - 122016</p> -->
+                    <!-- <p class="text-sm text-gray-500"><strong style="color: black;">Diagnostics Partner:</strong> Meenakshi Diagnostics</p>
+                    <p class="text-sm text-gray-500">Plot NO 3-4, Block-WP, Sector 104, Hazipur<br>Noida, Gautam Buddha Nagar, Uttar Pradesh</p> -->
+                    <!-- <p class="text-sm text-gray-500"><strong style="color: black;">Diagnostics Partner:</strong> Meenakshi Diagnostics</p>
+                    <p class="text-sm text-gray-500">PLOT NO 3A, opp. Cherry County, SEC-04, Iteda<br>Greater Noida, Ithaira, Uttar Pradesh-201318</p> -->
+                    <p class="text-sm text-gray-500"><strong style="color: black;">Diagnostics Partner:</strong> Mediscan Diagnostics</p>
+                    <p class="text-sm text-gray-500">TA-93 D, near PNB Bank, Kalkaji Extension, Block A 8,<br> Tughlakabad Extension, Kalkaji, New Delhi, Delhi, 110019</p>
+                </div>
+            </div>
+
+            <!-- Info Bar -->
+            <div class="grid grid-cols-2 gap-y-4 mb-10 bg-gray-50 p-6 rounded-lg border border-gray-100">
+                <div>
+                    <p class="text-xs uppercase font-bold text-gray-400">Patient Details</p>
+                    <p id="disp_name" class="text-xl font-bold text-blue-900">—</p>
+                    <p class="text-sm text-gray-600"><span id="disp_age">—</span> Years / <span id="disp_gender">—</span></p>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs uppercase font-bold text-gray-400">Reference Info</p>
+                    <p class="text-sm text-gray-600">Referred by: <span id="disp_referred" class="font-bold text-gray-800">—</span></p>
+                    <p class="text-sm text-gray-600">Reg Date: <span id="disp_regDate" class="font-bold text-gray-800">—</span></p>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <table class="w-full mb-8">
+                <thead>
+                    <tr class="border-b-2 border-gray-800 text-left text-sm uppercase font-bold text-gray-600">
+                        <th class="py-3 px-2">Test Name</th>
+                        <th class="py-3 px-2 text-center">Qty</th>
+                        <th class="py-3 px-2 text-right">MRP</th>
+                        <th class="py-3 px-2 text-right">Discount</th>
+                        <th class="py-3 px-2 text-right">Total</th>
+                    </tr>
+                </thead>
+                <tbody id="invoiceItems">
+                    <!-- Items injected here -->
+                </tbody>
+            </table>
+
+            <!-- Totals -->
+            <div class="flex justify-end border-t border-gray-100 pt-6">
+                <div class="w-48 space-y-3">
+                    <div class="flex justify-between text-sm text-gray-600">
+                        <span>Subtotal:</span>
+                        <span id="sub_total">₹0.00</span>
+                    </div>
+                    <div class="flex justify-between text-sm text-green-500">
+                        <span>Total Savings:</span>
+                        <span id="total_discount">-₹0.00</span>
+                    </div>
+                    <div class="flex justify-between text-lg font-bold text-blue-900 border-t border-gray-200 pt-3">
+                        <span>Total:</span>
+                        <span id="grand_total">₹0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-12 text-left border-t border-gray-100 pt-8">
+                <div class="flex justify-between text-xs text-gray-500">
+                    <p class="text-sm font-bold text-blue-600 mb-2">For MY LAB BUDDY</p>
+                </div>
+                <!-- <div class="flex justify-between text-xs text-gray-500">
+                    <p class="text-sm font-medium text-gray-500 mb-2">Reg. Office: H. No. 622A/5A, Govindpuri, Kalkaji, New Delhi - 110019</p>
+                </div> -->
+                <div class="flex justify-between text-xs text-gray-500">
+                    <p class="text-sm font-medium text-gray-500 mb-2">PAN: ACCFM3447R</p>
+                </div>
+                <div class="flex justify-between text-xs text-gray-500">
+                    <p class="text-sm font-medium text-gray-500 mb-2">Customer Care: <a href="tel:8448879897">8448879897</a></p>
+                </div>
+                <div class="flex justify-between text-xs text-gray-500">
+                    <p class="text-sm font-medium text-gray-500 mb-2">Please Note: This is an electronically generated bill and does not required any signature. Diagnostics services are exempt from Goods & service Tax.</p>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <!-- <div class="mt-16 text-center border-t border-gray-100 pt-8">
+                <p class="text-lg font-semibold text-gray-700 mb-2">Thank you for choosing, My Lab Buddy</p>
+                <p class="text-xs text-gray-400 uppercase tracking-widest"></p>
+            </div> -->
+        </div>
+    </div>
+
+    <script>
+        // Global State
+        let items = [
+            { id: Date.now(), name: '', qty: 1, mrp: 0, disc: 0 }
+        ];
+
+        const invNo = 'ZRP-' + Math.floor(100000 + Math.random() * 900000);
+        document.getElementById('inv_no').innerText = invNo;
+        document.getElementById('inv_date').innerText = new Date().toLocaleDateString('en-IN');
+        document.getElementById('in_regDate').valueAsDate = new Date();
+
+        function addRow() {
+            items.push({ id: Date.now(), name: '', qty: 1, mrp: 0, disc: 0 });
+            renderInputs();
+            updateInvoice();
+        }
+
+        function removeRow(id) {
+            if(items.length > 1) {
+                items = items.filter(item => item.id !== id);
+                renderInputs();
+                updateInvoice();
+            }
+        }
+
+        function handleInput(id, field, value) {
+            const item = items.find(i => i.id === id);
+            if(field === 'name') item.name = value;
+            else item[field] = parseFloat(value) || 0;
+            updateInvoice();
+        }
+
+        function renderInputs() {
+            const container = document.getElementById('itemRows');
+            container.innerHTML = '';
+            
+            items.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'grid grid-cols-12 gap-2 test-row items-center';
+                row.innerHTML = `
+                    <div class="col-span-5">
+                        <input type="text" class="input-field text-sm" placeholder="Test Name" value="${item.name}" oninput="handleInput(${item.id}, 'name', this.value)">
+                    </div>
+                    <div class="col-span-1">
+                        <input type="number" class="input-field text-sm px-1 text-center" value="${item.qty}" oninput="handleInput(${item.id}, 'qty', this.value)">
+                    </div>
+                    <div class="col-span-2">
+                        <input type="number" class="input-field text-sm" placeholder="MRP" value="${item.mrp || ''}" oninput="handleInput(${item.id}, 'mrp', this.value)">
+                    </div>
+                    <div class="col-span-2">
+                        <input type="number" class="input-field text-sm text-green-600" placeholder="Disc" value="${item.disc || ''}" oninput="handleInput(${item.id}, 'disc', this.value)">
+                    </div>
+                    <div class="col-span-2 flex justify-end">
+                        <button onclick="removeRow(${item.id})" class="delete-btn opacity-0 text-green-400 hover:text-green-600 p-2 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function updateInvoice() {
+            // Patient Info
+            document.getElementById('disp_name').innerText = document.getElementById('in_patientName').value || '—';
+            document.getElementById('disp_age').innerText = document.getElementById('in_age').value || '—';
+            document.getElementById('disp_gender').innerText = document.getElementById('in_gender').value;
+            document.getElementById('disp_referred').innerText = document.getElementById('in_referredBy').value || '—';
+            
+            const rawDate = document.getElementById('in_regDate').value;
+            document.getElementById('disp_regDate').innerText = rawDate ? new Date(rawDate).toLocaleDateString('en-IN') : '—';
+            
+            const msme = document.getElementById('in_msme').value;
+            document.getElementById('msme_display').style.display = msme ? 'block' : 'none';
+            document.getElementById('msme_display').querySelector('span').innerText = msme;
+
+            // Table Body
+            const tbody = document.getElementById('invoiceItems');
+            tbody.innerHTML = '';
+            
+            let subtotal = 0;
+            let totalDisc = 0;
+
+            items.forEach(item => {
+                const lineTotal = (item.mrp - item.disc) * item.qty;
+                subtotal += item.mrp * item.qty;
+                totalDisc += item.disc * item.qty;
+
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-gray-100 text-sm text-gray-700';
+                tr.innerHTML = `
+                    <td class="py-4 px-2 font-medium text-gray-800">${item.name || '<i>Unnamed Test</i>'}</td>
+                    <td class="py-4 px-2 text-center">${item.qty}</td>
+                    <td class="py-4 px-2 text-right">₹${item.mrp.toFixed(2)}</td>
+                    <td class="py-4 px-2 text-right text-green-500">₹${item.disc.toFixed(2)}</td>
+                    <td class="py-4 px-2 text-right font-bold text-gray-900">₹${lineTotal.toFixed(2)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('sub_total').innerText = `₹${subtotal.toFixed(2)}`;
+            document.getElementById('total_discount').innerText = `-₹${totalDisc.toFixed(2)}`;
+            document.getElementById('grand_total').innerText = `₹${(subtotal - totalDisc).toFixed(2)}`;
+        }
+
+        // Initialize
+        renderInputs();
+        updateInvoice();
+    </script>
+</body>
+</html>
