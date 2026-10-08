@@ -99,6 +99,12 @@
                     <label>MSME Reg No. UDYAM-DL-09-0030416</label>
                     <input type="text" id="in_msme" class="input-field" placeholder="Enter Reg No." oninput="updateInvoice()">
                 </div>
+                <div class="input-group">
+                    <label>Lab Address</label>
+                    <select id="lab_address" class="" onchange="updateInvoice()">
+                        <option value="Prognosis">Prognosis Laboratories</option>
+                    </select>
+                </div>
             </div>
 
             <!-- Test Itemizer -->
@@ -122,7 +128,7 @@
                     <!-- <p class="text-lg font-semibold text-gray-600"></p> -->
                     <img class="h-24 w-48 object-cover" src="./zorpid.png" alt="">
                     <div class="mt-4 text-sm text-gray-500 leading-relaxed">
-                        <p id="comp_address"><strong style="color: black;">Reg. Office: </strong>622A/5A, Govindpuri, Kalkaji<br>New Delhi, Delhi - 110019</p>
+                        <p id="comp_address"><strong style="color: black;">Reg. Office: </strong>DPT 808B, F-79 & 80,<br> 8th Floor DLF Prime Tower, Okhla Industrial Area, <br> Okhla Phase - 1, New Delhi, Delhi - 110020</p>
                         <p id="comp_address"><strong style="color: black;">Customer Care: </strong> 8448879897</p>
                         <!-- <p class="font-semibold text-gray-700 mt-1">Customer Care: 8448879897</p> -->
                         <p id="msme_display"><strong style="color: black;">MSME Reg No: </strong><span>UDYAM-DL-09-0030416</span></p>
@@ -197,7 +203,7 @@
 
             <div class="mt-12 text-left border-t border-gray-100 pt-8">
                 <div class="flex justify-between text-xs text-gray-500">
-                    <p class="text-sm font-bold text-blue-600 mb-2">For MY LAB BUDDY</p>
+                    <p class="text-sm font-bold text-blue-600 mb-2">For ZORPID</p>
                 </div>
                 <!-- <div class="flex justify-between text-xs text-gray-500">
                     <p class="text-sm font-medium text-gray-500 mb-2">Reg. Office: H. No. 622A/5A, Govindpuri, Kalkaji, New Delhi - 110019</p>
